@@ -150,36 +150,19 @@ function validar() {
 		    9: 9000000
 		};
 
-		// SOLO VALIDAR TIN-MAN SI FALLA COFRES
-		let fallaCofres = false;
+		// SOLO si YA hay error de cofres
+		const hayErrorCofres =
+		    errores.some(e =>
+		        e.includes("puntos cofres")
+		    );
 
-		if (paseOro) {
-		    if (puntos < 3000) {
-		        errores.push("puntos cofres (pase oro < 3000)");
-		        fallaCofres = true;
-		    }
-		} else {
-		    if (puntos < 4500) {
-		        errores.push("puntos cofres (sin pase oro < 4500)");
-		        fallaCofres = true;
-		    }
-		}
-
-		if (fallaCofres) {
+		if (hayErrorCofres) {
 		    if (tin < minimos[nivel]) {
 		        errores.push(
 		            `tin-man insuficiente para G${nivel}`
 		        );
 		    }
 		}
-
-                if (errores.length > 0) {
-                    noCumplen.push({
-                        nombre: row["nombre"],
-                        errores
-                    });
-                }
-
             });
 
             const resultado =
