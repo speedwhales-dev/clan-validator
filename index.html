@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Clan Validator</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        .error {
+            color: red;
+            margin-bottom: 10px;
+        }
+
+        .ok {
+            color: green;
+            font-weight: bold;
+        }
+
+        pre {
+            background: #eee;
+            padding: 15px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>Clan Validator</h1>
+
+<p>Sube el CSV exportado del juego:</p>
+
+<input type="file" id="csvFile" accept=".csv">
+<button onclick="validar()">Validar</button>
+
+<h2>Resultado</h2>
+
+<div id="resultado"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
+<script>
+
+function limpiarNumero(valor) {
+    return Number(
+        String(valor)
+            .trim()
+            .replace(/\./g, "")
+            .replace(/,/g, "")
+    );
+}
+
+function validar() {
+
+    const file =
+        document.getElementById("csvFile")
+        .files[0];
+
+    if (!file) {
+        alert("Selecciona un CSV");
+        return;
+    }
+
+    Papa.parse(file, {
+
+        header: true,
+        skipEmptyLines: true,
+
+        complete: function(results) {
+
+            const noCumplen = [];
+
+            results.data.forEach(row => {
+
+                const errores = [];
+
+                // Pase de oro
+                const paseOro =
+                    ["si", "sí", "true", "1"]
+                    .includes(
+                        String(row["Pase de oro"])
+                        .trim()
+                        .toLowerCase()
+                    );
+
+                // Cofres
+                const puntos =
+                    limpiarNumero(
+                        row["puntos de cofres"]
+                    );
+
+                if (paseOro) {
+                    if (puntos < 3000) {
+                        errores.push(
+                            "puntos cofres (pase oro < 3000)"
+                        );
+                    }
+                } else {
+                    if (puntos < 4500) {
+                        errores.push(
+                            "puntos cofres (sin pase oro < 4500)"
+                        );
+                    }
+                }
+
+                // Cofres épicos
+                const epicos =
+                    limpiarNumero(
+                        row["cofres epicos"]
+                    );
+
+                if (epicos < 20) {
+                    errores.push(
+                        "cofres épicos < 20"
+                    );
+                }
+
+                // Nivel guardias
+                const nivel = Number(
+                    String(
+                        row["nivel de guardias"]
+                    )
+                    .trim()
+                    .toUpperCase()
+                    .replace("G", "")
+                );
+
+                const tin =
+                    limpiarNumero(
+                        row["tin-man"]
+                    );
+
+                const minimos = {
+                    1: 750000,
+                    2: 750000,
+                    3: 750000,
+                    4: 750000,
+                    5: 750000,
+                    6: 750000,
+                    7: 2500000,
+                    8: 6000000,
+                    9: 9000000
+                };
+
+                if (tin < minimos[nivel]) {
+                    errores.push(
+                        `tin-man insuficiente para G${nivel}`
+                    );
+                }
+
+                if (errores.length > 0) {
+                    noCumplen.push({
+                        nombre: row["nombre"],
+                        errores
+                    });
+                }
+
+            });
+
+            const resultado =
+                document.getElementById(
+                    "resultado"
+                );
+
+            if (noCumplen.length === 0) {
+
+                resultado.innerHTML =
+                    `<p class="ok">
+                    Todos cumplen
+                    </p>`;
+
+            } else {
+
+                let html = "<pre>";
+
+                noCumplen.forEach(j => {
+                    html +=
+                        `- ${j.nombre} → ` +
+                        `${j.errores.join(", ")}\n`;
+                });
+
+                html += "</pre>";
+
+                resultado.innerHTML = html;
+            }
+        }
+    });
+}
+
+</script>
+
+</body>
+</html>
