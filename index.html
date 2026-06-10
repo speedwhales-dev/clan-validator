@@ -79,7 +79,7 @@ function validar() {
                 const errores = [];
 
                 // =========================
-                // PASO 1: PASE DE ORO + COFRES
+                // COFRES + PASE ORO
                 // =========================
                 const paseOro =
                     ["si", "sí", "true", "1"]
@@ -92,30 +92,29 @@ function validar() {
                 const puntos = limpiarNumero(row["puntos de cofres"]);
 
                 let hayErrorCofres = false;
+                let minCofres = paseOro ? 3000 : 4500;
 
-                if (paseOro) {
-                    if (puntos < 3000) {
-                        errores.push("puntos cofres (pase oro < 3000)");
-                        hayErrorCofres = true;
-                    }
-                } else {
-                    if (puntos < 4500) {
-                        errores.push("puntos cofres (sin pase oro < 4500)");
-                        hayErrorCofres = true;
-                    }
+                if (puntos < minCofres) {
+                    errores.push(
+                        `puntos cofres: ${puntos} / ${minCofres}`
+                    );
+                    hayErrorCofres = true;
                 }
 
                 // =========================
-                // PASO 2: COFRES ÉPICOS
+                // COFRES ÉPICOS
                 // =========================
                 const epicos = limpiarNumero(row["cofres epicos"]);
+                const minEpicos = 20;
 
-                if (epicos < 20) {
-                    errores.push("cofres épicos < 20");
+                if (epicos < minEpicos) {
+                    errores.push(
+                        `cofres épicos: ${epicos} / ${minEpicos}`
+                    );
                 }
 
                 // =========================
-                // PASO 3: TIN-MAN (solo si falla cofres)
+                // TIN-MAN (solo si falla cofres)
                 // =========================
                 if (hayErrorCofres) {
 
@@ -140,15 +139,17 @@ function validar() {
                         9: 9000000
                     };
 
-                    if (tin < minimos[nivel]) {
+                    const minTin = minimos[nivel];
+
+                    if (tin < minTin) {
                         errores.push(
-                            `tin-man insuficiente para G${nivel}`
+                            `tin-man: ${tin.toLocaleString()} / ${minTin.toLocaleString()}`
                         );
                     }
                 }
 
                 // =========================
-                // RESULTADO
+                // RESULTADO FINAL
                 // =========================
                 if (errores.length > 0) {
                     noCumplen.push({
@@ -167,7 +168,7 @@ function validar() {
                 let html = "<pre>";
 
                 noCumplen.forEach(j => {
-                    html += `- ${j.nombre} → ${j.errores.join(", ")}\n`;
+                    html += `- ${j.nombre} → ${j.errores.join(" | ")}\n`;
                 });
 
                 html += "</pre>";
