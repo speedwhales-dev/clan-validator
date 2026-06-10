@@ -127,38 +127,51 @@ function validar() {
                     );
                 }
 
-                // Nivel guardias
-                const nivel = Number(
-                    String(
-                        row["nivel de guardias"]
-                    )
-                    .trim()
-                    .toUpperCase()
-                    .replace("G", "")
-                );
+		// Nivel guardias
+		const nivel = Number(
+		    String(row["nivel de guardias"])
+		    .trim()
+		    .toUpperCase()
+		    .replace("G", "")
+		);
 
-                const tin =
-                    limpiarNumero(
-                        row["tin-man"]
-                    );
+		const tin =
+		    limpiarNumero(row["tin-man"]);
 
-                const minimos = {
-                    1: 750000,
-                    2: 750000,
-                    3: 750000,
-                    4: 750000,
-                    5: 750000,
-                    6: 750000,
-                    7: 2500000,
-                    8: 6000000,
-                    9: 9000000
-                };
+		const minimos = {
+		    1: 750000,
+		    2: 750000,
+		    3: 750000,
+		    4: 750000,
+		    5: 750000,
+		    6: 750000,
+		    7: 2500000,
+		    8: 6000000,
+		    9: 9000000
+		};
 
-                if (tin < minimos[nivel]) {
-                    errores.push(
-                        `tin-man insuficiente para G${nivel}`
-                    );
-                }
+		// SOLO VALIDAR TIN-MAN SI FALLA COFRES
+		let fallaCofres = false;
+
+		if (paseOro) {
+		    if (puntos < 3000) {
+		        errores.push("puntos cofres (pase oro < 3000)");
+		        fallaCofres = true;
+		    }
+		} else {
+		    if (puntos < 4500) {
+		        errores.push("puntos cofres (sin pase oro < 4500)");
+		        fallaCofres = true;
+		    }
+		}
+
+		if (fallaCofres) {
+		    if (tin < minimos[nivel]) {
+		        errores.push(
+		            `tin-man insuficiente para G${nivel}`
+		        );
+		    }
+		}
 
                 if (errores.length > 0) {
                     noCumplen.push({
