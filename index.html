@@ -18,11 +18,6 @@
             margin-left: 10px;
         }
 
-        .error {
-            color: red;
-            margin-bottom: 10px;
-        }
-
         .ok {
             color: green;
             font-weight: bold;
@@ -64,9 +59,7 @@ function limpiarNumero(valor) {
 
 function validar() {
 
-    const file =
-        document.getElementById("csvFile")
-        .files[0];
+    const file = document.getElementById("csvFile").files[0];
 
     if (!file) {
         alert("Selecciona un CSV");
@@ -74,7 +67,6 @@ function validar() {
     }
 
     Papa.parse(file, {
-
         header: true,
         skipEmptyLines: true,
 
@@ -86,7 +78,9 @@ function validar() {
 
                 const errores = [];
 
-                // Pase de oro
+                // =========================
+                // PASO 1: PASE DE ORO + COFRES
+                // =========================
                 const paseOro =
                     ["si", "sí", "true", "1"]
                     .includes(
@@ -95,96 +89,85 @@ function validar() {
                         .toLowerCase()
                     );
 
-                // Cofres
-                const puntos =
-                    limpiarNumero(
-                        row["puntos de cofres"]
-                    );
+                const puntos = limpiarNumero(row["puntos de cofres"]);
+
+                let hayErrorCofres = false;
 
                 if (paseOro) {
                     if (puntos < 3000) {
-                        errores.push(
-                            "puntos cofres (pase oro < 3000)"
-                        );
+                        errores.push("puntos cofres (pase oro < 3000)");
+                        hayErrorCofres = true;
                     }
                 } else {
                     if (puntos < 4500) {
+                        errores.push("puntos cofres (sin pase oro < 4500)");
+                        hayErrorCofres = true;
+                    }
+                }
+
+                // =========================
+                // PASO 2: COFRES ÉPICOS
+                // =========================
+                const epicos = limpiarNumero(row["cofres epicos"]);
+
+                if (epicos < 20) {
+                    errores.push("cofres épicos < 20");
+                }
+
+                // =========================
+                // PASO 3: TIN-MAN (solo si falla cofres)
+                // =========================
+                if (hayErrorCofres) {
+
+                    const nivel = Number(
+                        String(row["nivel de guardias"])
+                        .trim()
+                        .toUpperCase()
+                        .replace("G", "")
+                    );
+
+                    const tin = limpiarNumero(row["tin-man"]);
+
+                    const minimos = {
+                        1: 750000,
+                        2: 750000,
+                        3: 750000,
+                        4: 750000,
+                        5: 750000,
+                        6: 750000,
+                        7: 2500000,
+                        8: 6000000,
+                        9: 9000000
+                    };
+
+                    if (tin < minimos[nivel]) {
                         errores.push(
-                            "puntos cofres (sin pase oro < 4500)"
+                            `tin-man insuficiente para G${nivel}`
                         );
                     }
                 }
 
-                // Cofres épicos
-                const epicos =
-                    limpiarNumero(
-                        row["cofres epicos"]
-                    );
-
-                if (epicos < 20) {
-                    errores.push(
-                        "cofres épicos < 20"
-                    );
+                // =========================
+                // RESULTADO
+                // =========================
+                if (errores.length > 0) {
+                    noCumplen.push({
+                        nombre: row["nombre"],
+                        errores
+                    });
                 }
-
-		// Nivel guardias
-		const nivel = Number(
-		    String(row["nivel de guardias"])
-		    .trim()
-		    .toUpperCase()
-		    .replace("G", "")
-		);
-
-		const tin =
-		    limpiarNumero(row["tin-man"]);
-
-		const minimos = {
-		    1: 750000,
-		    2: 750000,
-		    3: 750000,
-		    4: 750000,
-		    5: 750000,
-		    6: 750000,
-		    7: 2500000,
-		    8: 6000000,
-		    9: 9000000
-		};
-
-		// SOLO si YA hay error de cofres
-		const hayErrorCofres =
-		    errores.some(e =>
-		        e.includes("puntos cofres")
-		    );
-
-		if (hayErrorCofres) {
-		    if (tin < minimos[nivel]) {
-		        errores.push(
-		            `tin-man insuficiente para G${nivel}`
-		        );
-		    }
-		}
             });
 
-            const resultado =
-                document.getElementById(
-                    "resultado"
-                );
+            const resultado = document.getElementById("resultado");
 
             if (noCumplen.length === 0) {
-
-                resultado.innerHTML =
-                    `<p class="ok">
-                    Todos cumplen
-                    </p>`;
-
+                resultado.innerHTML = `<p class="ok">Todos cumplen</p>`;
             } else {
 
                 let html = "<pre>";
 
                 noCumplen.forEach(j => {
-                    html +=
-                        `- ${j.nombre} → ` +
-                        `${j.errores.join(", ")}\n`;
+                    html += `- ${j.nombre} → ${j.errores.join(", ")}\n`;
                 });
 
                 html += "</pre>";
